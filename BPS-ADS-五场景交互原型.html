@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>账户中台 · BPS / ADS 五场景交互原型</title>
+<style>
+:root{
+  --ink:#1f2329;--muted:#8c8c8c;--line:#f0f0f0;--bps-red:#e11d2e;--blue:#1677ff;
+  --iam:#5b35d9;--ok:#52c41a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:#111}
+button,input{font:inherit}
+button{cursor:pointer}
+.shell{height:100%;display:grid;grid-template-columns:248px 1fr 300px;min-width:1180px}
+.nav{background:#16171c;color:#d7d9e0;padding:14px 10px;overflow:auto}
+.nav h1{margin:0 10px 6px;font-size:14px;color:#fff}
+.nav .hint{margin:0 10px 14px;font-size:11px;color:#8b909c;line-height:1.5}
+.sc{width:100%;text-align:left;border:1px solid transparent;background:transparent;color:#d7d9e0;border-radius:8px;padding:10px 10px;margin:0 0 6px}
+.sc:hover{background:#24262e}
+.sc.on{background:#f3eeff;color:#3d1d9c;border-color:#ddd0ff}
+.sc b{display:block;font-size:13px}
+.sc span{display:block;margin-top:3px;font-size:11px;opacity:.78}
+.mid{display:grid;grid-template-rows:40px 1fr 132px;background:#c9cdd6;min-width:0}
+.toolbar{display:flex;align-items:center;gap:8px;padding:0 10px;background:#1c1d22;color:#eee}
+.toolbar .btn{height:26px;border:1px solid #3c3f48;border-radius:6px;background:#2a2b31;color:#eee;padding:0 10px}
+.toolbar .btn:disabled{opacity:.35;cursor:not-allowed}
+.toolbar .grow{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:#bbb}
+.seg{display:flex;border:1px solid #3c3f48;border-radius:6px;overflow:hidden}
+.seg button{height:24px;border:0;background:#2a2b31;color:#aaa;padding:0 12px}
+.seg button.on{background:#f3eeff;color:#3d1d9c;font-weight:650}
+.browser{margin:10px;background:#fff;border:1px solid #c5c9d3;border-radius:8px;overflow:hidden;display:grid;grid-template-rows:34px 36px 1fr;min-height:0}
+.tabs{display:flex;gap:4px;padding:6px 8px 0;background:#eceef2}
+.tab{border:0;background:transparent;padding:5px 12px;border-radius:6px 6px 0 0;color:#666;font-size:12px}
+.tab.on{background:#fff;color:#111;font-weight:650}
+.urlbar{display:flex;align-items:center;gap:8px;padding:0 10px;background:#e9ebf0;border-bottom:1px solid #d5d8e0}
+.dots{display:flex;gap:5px}
+.dots i{width:8px;height:8px;border-radius:50%;background:#c5c5c5;display:block}
+.url{flex:1;height:26px;border-radius:13px;background:#fff;border:1px solid #d0d4dd;display:flex;align-items:center;padding:0 10px;overflow:hidden;white-space:nowrap;font:12px/1 ui-monospace,Consolas,monospace}
+.url.iam{border-color:#c4b5fd;background:#f6f2ff;color:var(--iam);font-weight:700}
+.url .host{font-weight:750}
+.url.iam .host{color:var(--iam)}
+.url .rest{color:#8a8f99}
+.stage{min-height:0;overflow:hidden;background:#fff;position:relative}
+.hist{background:#fff;border-top:1px solid #d5d8e0;overflow:auto;padding:6px 10px;font:11px/1.45 ui-monospace,Consolas,monospace}
+.hist .row{display:grid;grid-template-columns:20px 168px 1fr;gap:8px;padding:2px 0;color:#555}
+.hist .row.iam{color:var(--iam);font-weight:650}
+.hist .row.cur{background:#f6f2ff}
+.rail{background:#fff;border-left:1px solid #e8e8e8;padding:14px 14px;overflow:auto}
+.rail h2{margin:0 0 8px;font-size:14px}
+.rail p{margin:0 0 12px;color:#595959;font-size:12px}
+.ck{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:12px}
+.tag{padding:1px 7px;border-radius:4px;font-size:11px}
+.tag.on{background:#f6ffed;color:#389e0d}
+.tag.off{background:#f5f5f5;color:#8c8c8c}
+
+.stay{position:absolute;inset:0;overflow:auto}
+.blank{position:absolute;inset:0;background:#fff;display:grid;place-items:center}
+.spin{width:22px;height:22px;border:2px solid #eee;border-top-color:#bfbfbf;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.bps-login{display:grid;grid-template-columns:1fr 400px;min-height:100%;background:#fff}
+.bps-brand{display:grid;place-items:center}
+.bps-mark{width:88px;height:88px;margin:0 auto 16px;border-radius:18px;background:var(--bps-red);color:#fff;display:grid;place-items:center;font:800 52px/1 Arial,sans-serif}
+.bps-word{color:var(--bps-red);font-weight:800;letter-spacing:.16em;font-size:18px;text-align:center}
+.bps-form{padding:48px 36px;border-left:1px solid #f5f5f5}
+.bps-form h1{margin:0 0 22px;font-size:26px}
+.fld{margin:0 0 16px}
+.fld label{display:block;font-size:13px;margin:0 0 6px}
+.ibox{position:relative}
+.ibox input{width:100%;height:40px;border:1px solid #d9d9d9;border-radius:8px;padding:0 36px}
+.ibox .ico{position:absolute;left:12px;top:12px;color:#bfbfbf;font-size:14px}
+.btn-blue{height:40px;width:100%;border:0;border-radius:8px;background:var(--blue);color:#fff;font-weight:650}
+.btn-blue:disabled{opacity:.55}
+.bps-form a{color:var(--blue)}
+.bps-form .links{margin-top:12px}
+.bps-form .err{color:#cf1322;font-size:12px;margin:-6px 0 10px}
+
+.bps-app{display:grid;grid-template-rows:48px 1fr;min-height:100%;background:#f6f7fb}
+.bps-top{background:#fff;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;padding:0 16px;gap:12px}
+.bps-top .logo{color:var(--bps-red);font-weight:800;letter-spacing:.08em}
+.bps-top .grow{margin-left:auto;display:flex;align-items:center;gap:10px;color:#8c8c8c}
+.bps-body{display:grid;grid-template-columns:210px 1fr;min-height:0}
+.bps-side{background:#fff;border-right:1px solid #f0f0f0;padding:10px 8px}
+.bps-side .item{padding:8px 10px;border-radius:6px;color:#595959}
+.bps-side .item.on{background:#fff1f0;color:var(--bps-red);font-weight:650}
+.bps-side .cap{padding:14px 10px 6px;font-size:11px;color:#bfbfbf}
+.bps-main{padding:16px 20px 28px;overflow:auto}
+.bps-main h2{margin:0;font-size:20px}
+.live{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:10px;background:#f6ffed;color:#389e0d;font-size:11px}
+.kpi-row{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin:14px 0}
+.card{background:#fff;border:1px solid #f0f0f0;border-radius:10px;padding:14px}
+.ov{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.ov button{height:28px;border:1px solid #f0f0f0;background:#fff;border-radius:6px;padding:0 10px}
+.ov button.on{border-color:var(--blue);color:var(--blue)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.metrics .card b{display:block;font-size:18px;margin-top:4px}
+.metrics .card em{font-style:normal;color:#52c41a;font-size:12px}
+
+.ads-app{display:grid;grid-template-rows:48px 1fr;min-height:100%}
+.ads-top{background:#fff;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;padding:0 16px}
+.ads-logo{font-weight:800;letter-spacing:.04em}
+.ads-logo i{display:inline-block;width:18px;height:18px;background:var(--bps-red);margin-right:6px;vertical-align:-3px;clip-path:polygon(15% 0,100% 0,85% 100%,0 100%)}
+.ads-app .body{display:grid;grid-template-columns:200px 1fr;min-height:0}
+.ads-side{background:#141414;color:#d9d9d9;padding:12px 8px}
+.ads-side .item{padding:8px 10px;border-radius:6px}
+.ads-side .item.on{background:#1677ff;color:#fff}
+.ads-main{background:#f5f5f5;padding:16px 18px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:8px;border-bottom:1px solid #f0f0f0;font-size:12px}
+th{color:#8c8c8c;font-weight:600}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="nav">
+    <h1>账户中台原型</h1>
+    <p class="hint">校验、跳转时页面空白，只有转圈、没有文案。目标页加载完成后才出内容。正常约 1 秒；慢用来看地址栏。</p>
+    <div id="scenes"></div>
+  </aside>
+  <div class="mid">
+    <div class="toolbar">
+      <button class="btn" id="replay">重放本场景</button>
+      <button class="btn" id="next">下一步</button>
+      <div class="grow">
+        <span>节奏</span>
+        <div class="seg">
+          <button type="button" class="spd on" data-speed="normal">正常</button>
+          <button type="button" class="spd" data-speed="slow">慢</button>
+        </div>
+      </div>
+    </div>
+    <div class="browser">
+      <div class="tabs" id="tabs"></div>
+      <div class="urlbar">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <div class="url" id="url"></div>
+      </div>
+      <div class="stage" id="stage"></div>
+    </div>
+    <div class="hist" id="hist"></div>
+  </div>
+  <aside class="rail">
+    <h2 id="nowTitle">选择场景</h2>
+    <p id="nowWhat">从左侧点一个场景。场景一、二自动走完；场景三在登录页点 Sign in；场景四点「打开 ADS」；场景五点 Sign out。</p>
+    <div class="ck"><span>id.best.com Cookie</span><span class="tag" id="ckIam">无</span></div>
+    <div class="ck"><span>platform.bestfulfill.com</span><span class="tag" id="ckBps">无</span></div>
+    <div class="ck"><span>ads.bestads.com</span><span class="tag" id="ckAds">无</span></div>
+  </aside>
+</div>
+<script>
+const BPS="platform.bestfulfill.com", ADS="ads.bestads.com", IAM="id.best.com";
+const ACCOUNT="merchant@best.com", PASS="Pass1234";
+
+const SCENES=[
+  {id:"s1", no:"场景一", name:"初始进入 BPS（无任何登录态）",
+    what:"本域、中台都没有登录态。打开 BPS 先 302 中台 authorize；中台无 Cookie，回登录页。校验过程页面空白，登录页加载完才出内容。",
+    start:{iam:false,bps:false,ads:false}, auto:true,
+    steps:[
+      {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"blank", title:"打开 BPS", fast:220, slow:1100,
+        what:"地址栏是 BPS。本域还没进页，画面空白。马上 302 中台做校验。"},
+      {url:`https://${IAM}/sso/authorize?client_id=bps&redirect_uri=https%3A%2F%2F${BPS}%2Fsso%2Fcallback&state=n0a1`, host:"iam", tab:"BPS", page:"blank", title:"地址栏闪过中台", fast:450, slow:2200,
+        what:"地址栏变成 id.best.com。仍是空白，没有中台登录页、没有 BPS 登录表。中台无 Cookie，不发 code。"},
+      {url:`https://${BPS}/login`, host:"bps", tab:"BPS", page:"bps-login", title:"落到 BPS 登录页", fast:0, slow:0,
+        what:"确认没有任何登录态，登录页加载完成，这才出现 Welcome Back。人要输密请切到场景三。", iam:false,bps:false}
+    ]},
+  {id:"s2", no:"场景二", name:"进入 BPS（中台已有登录态）",
+    what:"中台已有全局 Cookie。BPS 本域没有。authorize 发 code，验过进工作台。免登不走 /sso/session。校验过程空白，工作台加载完才出内容。",
+    start:{iam:true,bps:false,ads:false}, auto:true,
+    steps:[
+      {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"blank", title:"打开 BPS", fast:200, slow:1100,
+        what:"本域无登录态，先 302 中台。还没进工作台，画面空白，也不出登录页。"},
+      {url:`https://${IAM}/sso/authorize?client_id=bps&redirect_uri=https%3A%2F%2F${BPS}%2Fsso%2Fcallback&state=k2m9`, host:"iam", tab:"BPS", page:"blank", title:"地址栏闪过中台", fast:400, slow:2200,
+        what:"地址栏是 id.best.com。页面仍空白。中台读到 Cookie：全局 + BPS 免登开 + 注册开 → 发 code。"},
+      {url:`https://${BPS}/sso/callback?code=c_bps_7f2a9c&state=k2m9`, host:"bps", tab:"BPS", page:"blank", title:"BPS 回调验 code", fast:250, slow:1200,
+        what:"地址栏回到 BPS callback。前端把 code 交给 POST /auth/code。工作台还没画出来。"},
+      {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"bps-home", title:"进入 BPS 工作台", fast:0, slow:0,
+        what:"校验通过，Dashboard 加载完成，这才出现工作台。中台 Cookie 一直在。", bps:true}
+    ]},
+  {id:"s3", no:"场景三", name:"输入账户密码登录 BPS",
+    what:"从已加载的 BPS 登录页提交。代验通过后 302 /sso/session 种 Cookie。提交后到工作台出来之前，画面空白。",
+    start:{iam:false,bps:false,ads:false}, auto:false,
+    steps:[
+      {url:`https://${BPS}/login`, host:"bps", tab:"BPS", page:"bps-login", title:"BPS 登录页", fast:0, slow:0, wait:"signin",
+        what:"登录页已经加载完成。输入邮箱和密码，点 Sign in。演示账号 merchant@best.com / Pass1234。"},
+      {url:`https://${BPS}/login`, host:"bps", tab:"BPS", page:"blank", title:"提交中（地址栏仍是 BPS）", fast:280, slow:1200,
+        what:"跨域 POST 中台登录。工作台还没进，登录页收起，画面空白。地址栏不离开 BPS。"},
+      {url:`https://${IAM}/sso/session?sid=s_bps_91ae`, host:"iam", tab:"BPS", page:"blank", title:"地址栏闪过中台种 Cookie", fast:450, slow:2200,
+        what:"地址栏变成 /sso/session。仍是空白。现在才在 id.best.com 写下登录 Cookie。", iam:true},
+      {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"bps-home", title:"进入 BPS 工作台", fast:0, slow:0,
+        what:"工作台加载完成，这才出现 Dashboard。之后打开其它应用可走免登。", bps:true,iam:true}
+    ]},
+  {id:"s4", no:"场景四", name:"已登录 BPS，打开 ADS",
+    what:"已在 BPS 工作台点「打开 ADS」。ADS 本域没有人。进 ADS 之前画面空白，工作台加载完才出内容，不出 ADS 登录表。",
+    start:{iam:true,bps:true,ads:false}, auto:false,
+    steps:[
+      {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"bps-home", title:"已在 BPS 工作台", fast:0, slow:0, wait:"open-ads",
+        what:"BPS 工作台已经加载完成。点右上角「打开 ADS」。", bps:true,iam:true},
+      {url:`https://${ADS}/`, host:"ads", tab:"ADS", page:"blank", title:"打开 ADS", fast:180, slow:1100,
+        what:"新标签地址栏换成 ads.bestads.com。ADS 还没进页，画面空白，立刻 302 中台。", bps:true,iam:true},
+      {url:`https://${IAM}/sso/authorize?client_id=ads&redirect_uri=https%3A%2F%2F${ADS}%2Fsso%2Fcallback&state=p4w1`, host:"iam", tab:"ADS", page:"blank", title:"地址栏闪过中台", fast:350, slow:2200,
+        what:"地址栏是 id.best.com。仍空白。Cookie 还在，发一张绑 ADS 的 code。", bps:true,iam:true},
+      {url:`https://${ADS}/sso/callback?code=c_ads_4e81d0&state=p4w1`, host:"ads", tab:"ADS", page:"blank", title:"ADS 回调验 code", fast:220, slow:1200,
+        what:"地址栏回到 ADS callback。本地没有该账户 → 无密码新建。工作台还没画。", bps:true,iam:true},
+      {url:`https://${ADS}/dashboard`, host:"ads", tab:"ADS", page:"ads-home", title:"免登进入 ADS", fast:0, slow:0,
+        what:"ADS 工作台加载完成，这才出现内容。全程没有 ADS 登录表、没有再输密码。", bps:true,iam:true,ads:true}
+    ]},
+  {id:"s5", no:"场景五", name:"退出 BPS",
+    what:"已登录 BPS。先清本域，再 302 中台 logout。退出校验过程空白，登录页加载完才出内容。",
+    start:{iam:true,bps:true,ads:false}, auto:false,
+    steps:[
+      {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"bps-home", title:"已在 BPS 工作台", fast:0, slow:0, wait:"logout",
+        what:"工作台已经加载完成。点右上角 Sign out。", bps:true,iam:true},
+      {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"blank", title:"已清本域", fast:180, slow:1100,
+        what:"BPS Session 已清。工作台收起，画面空白。必须再 302 中台 /sso/logout。", bps:false,iam:true},
+      {url:`https://${IAM}/sso/logout?redirect_uri=https%3A%2F%2F${BPS}%2Flogin`, host:"iam", tab:"BPS", page:"blank", title:"地址栏闪过中台登出", fast:450, slow:2200,
+        what:"地址栏变成 id.best.com/sso/logout。仍是空白。清中台 Cookie 后回登录页。", bps:false,iam:false},
+      {url:`https://${BPS}/login`, host:"bps", tab:"BPS", page:"bps-login", title:"回到 BPS 登录页", fast:0, slow:0,
+        what:"登录页加载完成，这才出现 Welcome Back。不要写「已退出全部产品」。", bps:false,iam:false}
+    ]}
+];
+
+let sceneId="s1", step=0, timer=0, trail=[], cookies={iam:false,bps:false,ads:false}, speed="normal";
+const $ = (id)=>document.getElementById(id);
+const scene = ()=>SCENES.find(s=>s.id===sceneId);
+const cur = ()=>scene().steps[step];
+
+function parseUrl(u){
+  if(!u) return {host:"",rest:""};
+  try{const x=new URL(u); return {host:x.host, rest:x.pathname+x.search};}catch{return {host:u,rest:""};}
+}
+function setTag(el,on){ el.textContent=on?"有":"无"; el.className="tag "+(on?"on":"off"); }
+function applyCookies(st){
+  if(st.iam!=null) cookies.iam=st.iam;
+  if(st.bps!=null) cookies.bps=st.bps;
+  if(st.ads!=null) cookies.ads=st.ads;
+}
+
+function renderNav(){
+  $("scenes").innerHTML=SCENES.map(s=>`<button class="sc ${s.id===sceneId?"on":""}" data-id="${s.id}"><b>${s.no}</b><span>${s.name}</span></button>`).join("");
+  document.querySelectorAll(".sc").forEach(b=>b.onclick=()=>select(b.dataset.id));
+}
+
+function render(){
+  const s=scene(), st=cur();
+  applyCookies(s.start);
+  s.steps.slice(0,step+1).forEach(applyCookies);
+  $("nowTitle").textContent=st.title;
+  $("nowWhat").textContent=st.what;
+  setTag($("ckIam"),cookies.iam);
+  setTag($("ckBps"),cookies.bps);
+  setTag($("ckAds"),cookies.ads);
+
+  const {host,rest}=parseUrl(st.url);
+  $("url").className="url"+(st.host==="iam"?" iam":"");
+  $("url").innerHTML=`<span class="rest">https://</span><span class="host">${host}</span><span class="rest">${rest}</span>`;
+
+  const showAds=st.tab==="ADS"||cookies.ads||(sceneId==="s4"&&step>0);
+  $("tabs").innerHTML=`<button class="tab ${st.tab!=="ADS"?"on":""}">BPS</button>`+(showAds?`<button class="tab ${st.tab==="ADS"?"on":""}">ADS</button>`:"");
+
+  $("stage").innerHTML=pageHtml(st);
+  bindPage();
+
+  if(st.url && trail[trail.length-1]!==st.url) trail.push(st.url);
+  $("hist").innerHTML=trail.map((u,i)=>{
+    const p=parseUrl(u); const iam=p.host===IAM; const now=u===st.url;
+    return `<div class="row ${iam?"iam":""} ${now?"cur":""}"><span>${i+1}</span><span>${p.host}</span><span>${u}</span></div>`;
+  }).join("");
+}
+
+function pageHtml(st){
+  if(st.page==="blank") return `<div class="blank"><i class="spin"></i></div>`;
+  if(st.page==="bps-login") return `<div class="stay">${bpsLogin(false)}</div>`;
+  if(st.page==="bps-home") return `<div class="stay">${bpsHome()}</div>`;
+  if(st.page==="ads-home") return `<div class="stay">${adsHome(true)}</div>`;
+  return "";
+}
+
+function bpsLogin(busy){
+  return `<div class="bps-login">
+    <div class="bps-brand"><div><div class="bps-mark">b</div><div class="bps-word">BESTFULFILL</div></div></div>
+    <div class="bps-form">
+      <h1>Welcome Back</h1>
+      <div class="fld"><label>Email</label><div class="ibox"><span class="ico">✉</span><input id="email" placeholder="Enter your email" value="${sceneId==="s3"?ACCOUNT:""}" ${busy?"disabled":""}></div></div>
+      <div class="fld"><label>Password</label><div class="ibox"><span class="ico">🔒</span><input id="pwd" type="password" placeholder="Password" value="${sceneId==="s3"?PASS:""}" ${busy?"disabled":""}></div></div>
+      <div class="err" id="loginErr"></div>
+      <button class="btn-blue" id="signin" ${busy?"disabled":""}>${busy?"Signing in…":"Sign in"}</button>
+      <div class="links"><p><a href="#">Forgot your password?</a></p><p>New to BESTFULFILL? <a href="#">Sign Up</a></p></div>
+    </div>
+  </div>`;
+}
+
+function bpsHome(){
+  const openAds=sceneId==="s4"&&step===0;
+  return `<div class="bps-app">
+    <div class="bps-top">
+      <div class="logo">BESTFULFILL</div>
+      <div class="grow">
+        ${openAds?'<button class="btn-blue" style="width:auto;padding:0 12px;height:30px" id="openAds">打开 ADS</button>':""}
+        ${sceneId==="s5"&&step===0?'<button class="btn-blue" style="width:auto;padding:0 12px;height:30px;background:#111" id="signout">Sign out</button>':""}
+        <span>${ACCOUNT}</span>
+      </div>
+    </div>
+    <div class="bps-body">
+      <aside class="bps-side">
+        <div class="item on">Home</div>
+        <div class="item">Orders <sup style="color:#e11d2e">3</sup></div>
+        <div class="item">Products</div>
+        <div class="item">Payment</div>
+        <div class="item">My Service</div>
+        <div class="cap">Apps</div>
+        <div class="item">Bestrack Parcel AI</div>
+        <div class="item">Marketing Metrics</div>
+        <div class="item">Spy Tool</div>
+        <div class="item">My Inventory</div>
+        <div class="item">Cost Settings</div>
+      </aside>
+      <div class="bps-main">
+        <h2>Dashboard <span class="live">Live</span></h2>
+        <div class="kpi-row">
+          <div class="card"><div>This Month Profit Goal</div><b style="font-size:22px">USD$12,480</b><div style="height:6px;background:#f0f0f0;border-radius:4px;margin-top:10px"><div style="width:46%;height:100%;background:#1677ff;border-radius:4px"></div></div></div>
+          <div class="card"><div>Orders to fulfill</div><b style="font-size:22px">3</b></div>
+        </div>
+        <div class="ov"><button class="on">Today</button><button>Last 7 Days</button><button>Last 30 Days</button><button>Last 90 Days</button></div>
+        <div class="metrics">
+          <div class="card">Revenue<b>$1,280</b><em>12%</em></div>
+          <div class="card">Net Profit<b>$316</b><em>8%</em></div>
+          <div class="card">Orders<b>18</b><em>5%</em></div>
+          <div class="card">Total Cost<b>$964</b><em>3%</em></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function adsHome(ready){
+  return `<div class="ads-app">
+    <div class="ads-top"><div class="ads-logo"><i></i>BESTADS</div><div style="margin-left:auto">${ACCOUNT}${ready?" · 免登成功":""}</div></div>
+    <div class="body">
+      <aside class="ads-side"><div class="item on">工作台</div><div class="item">广告管理</div><div class="item">素材</div><div class="item">报表</div></aside>
+      <div class="ads-main">
+        <h2 style="margin:0 0 12px">广告工作台</h2>
+        <div class="card">本地原先没有该账户，已无密码新建。全程没有 ADS 登录表。
+          <table style="margin-top:12px"><thead><tr><th>广告系列</th><th>花费</th><th>展示</th><th>状态</th></tr></thead>
+          <tbody><tr><td>US-TOFU-A</td><td>$420</td><td>18.2万</td><td>投放中</td></tr>
+          <tr><td>EU-Retarget</td><td>$860</td><td>24.4万</td><td>投放中</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function bindPage(){
+  const sign=$("signin");
+  if(sign && cur().wait==="signin"){
+    sign.onclick=()=>{
+      const e=($("email").value||"").trim(), p=$("pwd").value;
+      if(e!==ACCOUNT || p!==PASS){ $("loginErr").textContent="账号或密码错误"; return; }
+      playFrom(step+1);
+    };
+  }
+  const ads=$("openAds");
+  if(ads) ads.onclick=()=>playFrom(step+1);
+  const out=$("signout");
+  if(out) out.onclick=()=>playFrom(step+1);
+}
+
+function currentSpeed(){
+  return document.querySelector(".spd.on")?.dataset.speed || speed;
+}
+function setSpeed(v){
+  speed=v;
+  document.querySelectorAll(".spd").forEach(x=>x.classList.toggle("on", x.dataset.speed===v));
+}
+function stop(){ if(timer){clearTimeout(timer); timer=0;} }
+function delayOf(st){
+  if(currentSpeed()==="slow") return st.slow||0;
+  return st.fast||0;
+}
+function kickoffDelay(){ return currentSpeed()==="slow"?400:80; }
+function playFrom(n){
+  step=n; render();
+  const st=cur();
+  if(st.wait) return;
+  if(step>=scene().steps.length-1) return;
+  const ms=delayOf(st);
+  if(!ms){ playFrom(step+1); return; }
+  timer=setTimeout(()=>playFrom(step+1), ms);
+}
+function select(id){
+  stop(); sceneId=id; step=0; trail=[]; cookies={...scene().start};
+  renderNav(); render();
+  if(scene().auto) timer=setTimeout(()=>playFrom(1), kickoffDelay());
+}
+
+document.querySelectorAll(".spd").forEach(b=>{
+  b.addEventListener("click", ()=>setSpeed(b.dataset.speed));
+});
+$("replay").onclick=()=>select(sceneId);
+$("next").onclick=()=>{ stop(); if(step<scene().steps.length-1){ step++; render(); } };
+renderNav(); select("s1");
+</script>
+</body>
+</html>
