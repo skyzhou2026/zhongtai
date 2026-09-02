@@ -56,8 +56,22 @@ button{cursor:pointer}
 .tag.off{background:#f5f5f5;color:#8c8c8c}
 
 .stay{position:absolute;inset:0;overflow:auto}
-.blank{position:absolute;inset:0;background:#fff;display:grid;place-items:center}
-.spin{width:22px;height:22px;border:2px solid #eee;border-top-color:#bfbfbf;border-radius:50%;animation:spin .7s linear infinite}
+.bridge{position:absolute;inset:0;background:#e8eaee;display:grid;place-items:center}
+.bridge-card{width:420px;background:#fff;border-radius:16px;box-shadow:0 10px 28px rgba(31,35,41,.08);padding:36px 32px 28px}
+.bridge-apps{display:flex;align-items:center;justify-content:center;gap:0}
+.tile{width:108px;height:108px;border-radius:16px;background:#fff;display:grid;place-items:center;text-align:center;padding:8px}
+.tile.iam{border:1.5px solid #7c5cbf}
+.tile.bps{border:1.5px solid var(--bps-red)}
+.tile.ads{border:1.5px solid #1677ff}
+.tile .n1{font-weight:800;letter-spacing:.04em;line-height:1.15}
+.tile.iam .n1{color:#6f42c1;font-size:13px}
+.tile.bps .n1{color:var(--bps-red);font-size:11px}
+.tile.ads .n1{color:#111;font-size:13px}
+.tile.bps .mark{width:28px;height:28px;border-radius:8px;background:var(--bps-red);color:#fff;display:grid;place-items:center;font:800 16px/1 Arial;margin:0 auto 6px}
+.tile.ads .mark{width:18px;height:18px;background:var(--bps-red);margin:0 auto 6px;clip-path:polygon(15% 0,100% 0,85% 100%,0 100%)}
+.wave{width:72px;height:36px;flex:0 0 72px}
+.bridge-wait{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:22px;color:#8c8c8c;font-size:13px}
+.spin{width:18px;height:18px;border:2px solid #eee;border-top-color:var(--iam);border-radius:50%;animation:spin .7s linear infinite;flex:0 0 18px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .bps-login{display:grid;grid-template-columns:1fr 400px;min-height:100%;background:#fff}
@@ -116,7 +130,7 @@ th{color:#8c8c8c;font-weight:600}
 <div class="shell">
   <aside class="nav">
     <h1>账户中台原型</h1>
-    <p class="hint">校验、跳转时页面空白，只有转圈、没有文案。目标页加载完成后才出内容。正常约 1 秒；慢用来看地址栏。</p>
+    <p class="hint">302 跳转不出空白页，出 BEST ACCOUNT 连到对应应用的中性加载。目标页加载完成后才出登录表或工作台。正常约 1 秒；慢用来看地址栏。</p>
     <div id="scenes"></div>
   </aside>
   <div class="mid">
@@ -155,67 +169,67 @@ const ACCOUNT="merchant@best.com", PASS="Pass1234";
 
 const SCENES=[
   {id:"s1", no:"场景一", name:"初始进入 BPS（无任何登录态）",
-    what:"本域、中台都没有登录态。打开 BPS 先 302 中台 authorize；中台无 Cookie，回登录页。校验过程页面空白，登录页加载完才出内容。",
+    what:"本域、中台都没有登录态。打开 BPS 先 302 中台 authorize；中台无 Cookie，回登录页。跳转中出 BEST ACCOUNT → BPS 加载页，登录页加载完才出内容。",
     start:{iam:false,bps:false,ads:false}, auto:true,
     steps:[
       {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"blank", title:"打开 BPS", fast:220, slow:1100,
-        what:"地址栏是 BPS。本域还没进页，画面空白。马上 302 中台做校验。"},
+        what:"地址栏是 BPS。本域还没进页，出 BEST ACCOUNT → BESTFULFILL 加载，马上 302 中台。"},
       {url:`https://${IAM}/sso/authorize?client_id=bps&redirect_uri=https%3A%2F%2F${BPS}%2Fsso%2Fcallback&state=n0a1`, host:"iam", tab:"BPS", page:"blank", title:"地址栏闪过中台", fast:450, slow:2200,
-        what:"地址栏变成 id.best.com。仍是空白，没有中台登录页、没有 BPS 登录表。中台无 Cookie，不发 code。"},
+        what:"地址栏变成 id.best.com。仍是 BEST ACCOUNT → BPS 加载页，没有中台登录表、没有 BPS 登录表。中台无 Cookie，不发 code。"},
       {url:`https://${BPS}/login`, host:"bps", tab:"BPS", page:"bps-login", title:"落到 BPS 登录页", fast:0, slow:0,
         what:"确认没有任何登录态，登录页加载完成，这才出现 Welcome Back。人要输密请切到场景三。", iam:false,bps:false}
     ]},
   {id:"s2", no:"场景二", name:"进入 BPS（中台已有登录态）",
-    what:"中台已有全局 Cookie。BPS 本域没有。authorize 发 code，验过进工作台。免登不走 /sso/session。校验过程空白，工作台加载完才出内容。",
+    what:"中台已有全局 Cookie。BPS 本域没有。authorize 发 code，验过进工作台。免登不走 /sso/session。跳转中出 BEST ACCOUNT → BPS 加载页，工作台加载完才出内容。",
     start:{iam:true,bps:false,ads:false}, auto:true,
     steps:[
       {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"blank", title:"打开 BPS", fast:200, slow:1100,
-        what:"本域无登录态，先 302 中台。还没进工作台，画面空白，也不出登录页。"},
+        what:"本域无登录态，先 302 中台。还没进工作台，出 BEST ACCOUNT → BPS 加载页，也不出登录页。"},
       {url:`https://${IAM}/sso/authorize?client_id=bps&redirect_uri=https%3A%2F%2F${BPS}%2Fsso%2Fcallback&state=k2m9`, host:"iam", tab:"BPS", page:"blank", title:"地址栏闪过中台", fast:400, slow:2200,
-        what:"地址栏是 id.best.com。页面仍空白。中台读到 Cookie：全局 + BPS 免登开 + 注册开 → 发 code。"},
+        what:"地址栏是 id.best.com。仍是加载页。中台读到 Cookie：全局 + BPS 免登开 + 注册开 → 发 code。"},
       {url:`https://${BPS}/sso/callback?code=c_bps_7f2a9c&state=k2m9`, host:"bps", tab:"BPS", page:"blank", title:"BPS 回调验 code", fast:250, slow:1200,
-        what:"地址栏回到 BPS callback。前端把 code 交给 POST /auth/code。工作台还没画出来。"},
+        what:"地址栏回到 BPS callback。前端把 code 交给 POST /auth/code。加载页还在，工作台还没出来。"},
       {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"bps-home", title:"进入 BPS 工作台", fast:0, slow:0,
         what:"校验通过，Dashboard 加载完成，这才出现工作台。中台 Cookie 一直在。", bps:true}
     ]},
   {id:"s3", no:"场景三", name:"输入账户密码登录 BPS",
-    what:"从已加载的 BPS 登录页提交。代验通过后 302 /sso/session 种 Cookie。提交后到工作台出来之前，画面空白。",
+    what:"从已加载的 BPS 登录页提交。代验通过后 302 /sso/session 种 Cookie。提交后到工作台出来之前，出 BEST ACCOUNT → BPS 加载页。",
     start:{iam:false,bps:false,ads:false}, auto:false,
     steps:[
       {url:`https://${BPS}/login`, host:"bps", tab:"BPS", page:"bps-login", title:"BPS 登录页", fast:0, slow:0, wait:"signin",
         what:"登录页已经加载完成。输入邮箱和密码，点 Sign in。演示账号 merchant@best.com / Pass1234。"},
       {url:`https://${BPS}/login`, host:"bps", tab:"BPS", page:"blank", title:"提交中（地址栏仍是 BPS）", fast:280, slow:1200,
-        what:"跨域 POST 中台登录。工作台还没进，登录页收起，画面空白。地址栏不离开 BPS。"},
+        what:"跨域 POST 中台登录。工作台还没进，登录页换成 BEST ACCOUNT → BPS 加载页。地址栏不离开 BPS。"},
       {url:`https://${IAM}/sso/session?sid=s_bps_91ae`, host:"iam", tab:"BPS", page:"blank", title:"地址栏闪过中台种 Cookie", fast:450, slow:2200,
-        what:"地址栏变成 /sso/session。仍是空白。现在才在 id.best.com 写下登录 Cookie。", iam:true},
+        what:"地址栏变成 /sso/session。仍是加载页。现在才在 id.best.com 写下登录 Cookie。", iam:true},
       {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"bps-home", title:"进入 BPS 工作台", fast:0, slow:0,
         what:"工作台加载完成，这才出现 Dashboard。之后打开其它应用可走免登。", bps:true,iam:true}
     ]},
   {id:"s4", no:"场景四", name:"已登录 BPS，打开 ADS",
-    what:"已在 BPS 工作台点「打开 ADS」。ADS 本域没有人。进 ADS 之前画面空白，工作台加载完才出内容，不出 ADS 登录表。",
+    what:"已在 BPS 工作台点「打开 ADS」。ADS 本域没有人。进 ADS 时出 BEST ACCOUNT → ADS 加载页，工作台加载完才出内容，不出 ADS 登录表。",
     start:{iam:true,bps:true,ads:false}, auto:false,
     steps:[
       {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"bps-home", title:"已在 BPS 工作台", fast:0, slow:0, wait:"open-ads",
         what:"BPS 工作台已经加载完成。点右上角「打开 ADS」。", bps:true,iam:true},
       {url:`https://${ADS}/`, host:"ads", tab:"ADS", page:"blank", title:"打开 ADS", fast:180, slow:1100,
-        what:"新标签地址栏换成 ads.bestads.com。ADS 还没进页，画面空白，立刻 302 中台。", bps:true,iam:true},
+        what:"新标签地址栏换成 ads.bestads.com。ADS 还没进页，出 BEST ACCOUNT → ADS 加载页，立刻 302 中台。", bps:true,iam:true},
       {url:`https://${IAM}/sso/authorize?client_id=ads&redirect_uri=https%3A%2F%2F${ADS}%2Fsso%2Fcallback&state=p4w1`, host:"iam", tab:"ADS", page:"blank", title:"地址栏闪过中台", fast:350, slow:2200,
-        what:"地址栏是 id.best.com。仍空白。Cookie 还在，发一张绑 ADS 的 code。", bps:true,iam:true},
+        what:"地址栏是 id.best.com。仍是 BEST ACCOUNT → ADS 加载页。Cookie 还在，发一张绑 ADS 的 code。", bps:true,iam:true},
       {url:`https://${ADS}/sso/callback?code=c_ads_4e81d0&state=p4w1`, host:"ads", tab:"ADS", page:"blank", title:"ADS 回调验 code", fast:220, slow:1200,
         what:"地址栏回到 ADS callback。本地没有该账户 → 无密码新建。工作台还没画。", bps:true,iam:true},
       {url:`https://${ADS}/dashboard`, host:"ads", tab:"ADS", page:"ads-home", title:"免登进入 ADS", fast:0, slow:0,
         what:"ADS 工作台加载完成，这才出现内容。全程没有 ADS 登录表、没有再输密码。", bps:true,iam:true,ads:true}
     ]},
   {id:"s5", no:"场景五", name:"退出 BPS",
-    what:"已登录 BPS。先清本域，再 302 中台 logout。退出校验过程空白，登录页加载完才出内容。",
+    what:"已登录 BPS。先清本域，再 302 中台 logout。退出过程出 BEST ACCOUNT → BPS 加载页，登录页加载完才出内容。",
     start:{iam:true,bps:true,ads:false}, auto:false,
     steps:[
       {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"bps-home", title:"已在 BPS 工作台", fast:0, slow:0, wait:"logout",
         what:"工作台已经加载完成。点右上角 Sign out。", bps:true,iam:true},
       {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"blank", title:"已清本域", fast:180, slow:1100,
-        what:"BPS Session 已清。工作台收起，画面空白。必须再 302 中台 /sso/logout。", bps:false,iam:true},
+        what:"BPS Session 已清。工作台换成 BEST ACCOUNT → BPS 加载页。必须再 302 中台 /sso/logout。", bps:false,iam:true},
       {url:`https://${IAM}/sso/logout?redirect_uri=https%3A%2F%2F${BPS}%2Flogin`, host:"iam", tab:"BPS", page:"blank", title:"地址栏闪过中台登出", fast:450, slow:2200,
-        what:"地址栏变成 id.best.com/sso/logout。仍是空白。清中台 Cookie 后回登录页。", bps:false,iam:false},
+        what:"地址栏变成 id.best.com/sso/logout。仍是加载页。清中台 Cookie 后回登录页。", bps:false,iam:false},
       {url:`https://${BPS}/login`, host:"bps", tab:"BPS", page:"bps-login", title:"回到 BPS 登录页", fast:0, slow:0,
         what:"登录页加载完成，这才出现 Welcome Back。不要写「已退出全部产品」。", bps:false,iam:false}
     ]}
@@ -270,11 +284,30 @@ function render(){
 }
 
 function pageHtml(st){
-  if(st.page==="blank") return `<div class="blank"><i class="spin"></i></div>`;
+  if(st.page==="blank") return bridgeHtml(st.tab==="ADS"?"ads":"bps");
   if(st.page==="bps-login") return `<div class="stay">${bpsLogin(false)}</div>`;
   if(st.page==="bps-home") return `<div class="stay">${bpsHome()}</div>`;
   if(st.page==="ads-home") return `<div class="stay">${adsHome(true)}</div>`;
   return "";
+}
+
+function bridgeHtml(app){
+  const right=app==="ads"
+    ? `<div class="tile ads"><div><i class="mark"></i><div class="n1">BESTADS</div></div></div>`
+    : `<div class="tile bps"><div><div class="mark">b</div><div class="n1">BESTFULFILL</div></div></div>`;
+  return `<div class="bridge"><div class="bridge-card">
+    <div class="bridge-apps">
+      <div class="tile iam"><div class="n1">BEST<br>ACCOUNT</div></div>
+      <svg class="wave" viewBox="0 0 72 36" fill="none" aria-hidden="true">
+        <circle cx="4" cy="18" r="3" fill="#c4b5fd"/>
+        <path d="M7 18 C22 6, 28 30, 36 18 S50 6, 65 18" stroke="url(#g)" stroke-width="1.6"/>
+        <circle cx="68" cy="18" r="3" fill="${app==="ads"?"#91caff":"#f5a0a8"}"/>
+        <defs><linearGradient id="g" x1="7" y1="18" x2="65" y2="18"><stop stop-color="#7c5cbf"/><stop offset="1" stop-color="${app==="ads"?"#1677ff":"#e11d2e"}"/></linearGradient></defs>
+      </svg>
+      ${right}
+    </div>
+    <div class="bridge-wait"><i class="spin"></i><span>请稍后…</span></div>
+  </div></div>`;
 }
 
 function bpsLogin(busy){
