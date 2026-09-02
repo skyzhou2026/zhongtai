@@ -63,6 +63,13 @@ button{cursor:pointer}
 @keyframes spin{to{transform:rotate(360deg)}}
 .bridge-main{margin:0;font-size:16px;font-weight:650;color:#1f2329;line-height:1.45}
 .bridge-sub{margin:4px 0 0;font-size:13px;color:#8c8c8c;line-height:1.45}
+.newtab{position:absolute;inset:0;background:#fff;display:grid;place-items:center}
+.nt-box{text-align:center;width:min(520px,90%)}
+.nt-title{font-size:28px;font-weight:650;color:#5f6368;margin:0 0 22px;letter-spacing:.02em}
+.nt-row{display:flex;gap:10px;align-items:center}
+.nt-bar{flex:1;height:44px;border:1px solid #dfe1e5;border-radius:24px;display:flex;align-items:center;padding:0 16px;color:#9aa0a6;font-size:14px;background:#fff}
+.nt-go{height:44px;min-width:96px;border:0;border-radius:22px;background:#1a73e8;color:#fff;font-weight:650;padding:0 22px;flex:none}
+.nt-hint{margin:14px 0 0;color:#80868b;font-size:12px}
 
 .bps-login{display:grid;grid-template-columns:1fr 400px;min-height:100%;background:#fff}
 .bps-brand{display:grid;place-items:center}
@@ -120,7 +127,7 @@ th{color:#8c8c8c;font-weight:600}
 <div class="shell">
   <aside class="nav">
     <h1>账户中台原型</h1>
-    <p class="hint">302 跳转不出空白页、不出图标，出中性文案加载（中英）。目标页加载完成后才出登录表或工作台。正常约 1 秒；慢用来看地址栏。</p>
+    <p class="hint">场景一、二从浏览器空白新标签页开始，点「进入」后再打开 BPS。跳转中出中性文案加载（中英）。正常约 1 秒；慢用来看地址栏。</p>
     <div id="scenes"></div>
   </aside>
   <div class="mid">
@@ -152,7 +159,7 @@ th{color:#8c8c8c;font-weight:600}
   </div>
   <aside class="rail">
     <h2 id="nowTitle">选择场景</h2>
-    <p id="nowWhat">从左侧点一个场景。场景一、二自动走完；场景三在登录页点 Sign in；场景四点「打开 ADS」；场景五点 Sign out。</p>
+    <p id="nowWhat">从左侧点一个场景。场景一、二从空白页点「进入」；场景三在登录页点 Sign in；场景四点「打开 ADS」；场景五点 Sign out。</p>
     <div class="ck"><span>id.best.com Cookie</span><span class="tag" id="ckIam">无</span></div>
     <div class="ck"><span>platform.bestfulfill.com</span><span class="tag" id="ckBps">无</span></div>
     <div class="ck"><span>ads.bestads.com</span><span class="tag" id="ckAds">无</span></div>
@@ -164,22 +171,26 @@ const ACCOUNT="merchant@best.com", PASS="Pass1234";
 
 const SCENES=[
   {id:"s1", no:"场景一", name:"初始进入 BPS（无任何登录态）",
-    what:"本域、中台都没有登录态。打开 BPS 先 302 中台 authorize；中台无 Cookie，回登录页。跳转中出 BEST ACCOUNT → BPS 加载页，登录页加载完才出内容。",
-    start:{iam:false,bps:false,ads:false}, auto:true,
+    what:"从浏览器空白新标签页开始。点「进入」后打开 BPS，先 302 中台 authorize；中台无 Cookie，回登录页。",
+    start:{iam:false,bps:false,ads:false}, auto:false,
     steps:[
+      {url:"about:blank", host:"blank", tab:"New Tab", page:"newtab", title:"浏览器新标签页", fast:0, slow:0, wait:"enter",
+        what:"现在是浏览器空白新标签页，地址栏还没有网址。点「进入」，模拟打开 platform.bestfulfill.com。"},
       {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"blank", title:"打开 BPS", fast:220, slow:1100,
-        what:"地址栏是 BPS。本域还没进页，出 BEST ACCOUNT → BESTFULFILL 加载，马上 302 中台。"},
+        what:"地址栏变成 BPS。本域还没进页，出认证中心加载文案，马上 302 中台。"},
       {url:`https://${IAM}/sso/authorize?client_id=bps&redirect_uri=https%3A%2F%2F${BPS}%2Fsso%2Fcallback&state=n0a1`, host:"iam", tab:"BPS", page:"blank", title:"地址栏闪过中台", fast:450, slow:2200,
-        what:"地址栏变成 id.best.com。仍是 BEST ACCOUNT → BPS 加载页，没有中台登录表、没有 BPS 登录表。中台无 Cookie，不发 code。"},
+        what:"地址栏变成 id.best.com。仍是认证中心加载文案，没有中台登录表、没有 BPS 登录表。中台无 Cookie，不发 code。"},
       {url:`https://${BPS}/login`, host:"bps", tab:"BPS", page:"bps-login", title:"落到 BPS 登录页", fast:0, slow:0,
         what:"确认没有任何登录态，登录页加载完成，这才出现 Welcome Back。人要输密请切到场景三。", iam:false,bps:false}
     ]},
   {id:"s2", no:"场景二", name:"进入 BPS（中台已有登录态）",
-    what:"中台已有全局 Cookie。BPS 本域没有。authorize 发 code，验过进工作台。免登不走 /sso/session。跳转中出 BEST ACCOUNT → BPS 加载页，工作台加载完才出内容。",
-    start:{iam:true,bps:false,ads:false}, auto:true,
+    what:"从浏览器空白新标签页开始。中台已有全局 Cookie，BPS 本域没有。点「进入」后 authorize 发 code，验过进工作台。免登不走 /sso/session。",
+    start:{iam:true,bps:false,ads:false}, auto:false,
     steps:[
+      {url:"about:blank", host:"blank", tab:"New Tab", page:"newtab", title:"浏览器新标签页", fast:0, slow:0, wait:"enter",
+        what:"现在是浏览器空白新标签页。点「进入」。中台 Cookie 已在，BPS 本域还没有。"},
       {url:`https://${BPS}/`, host:"bps", tab:"BPS", page:"blank", title:"打开 BPS", fast:200, slow:1100,
-        what:"本域无登录态，先 302 中台。还没进工作台，出 BEST ACCOUNT → BPS 加载页，也不出登录页。"},
+        what:"本域无登录态，先 302 中台。还没进工作台，出认证中心加载文案，也不出登录页。"},
       {url:`https://${IAM}/sso/authorize?client_id=bps&redirect_uri=https%3A%2F%2F${BPS}%2Fsso%2Fcallback&state=k2m9`, host:"iam", tab:"BPS", page:"blank", title:"地址栏闪过中台", fast:400, slow:2200,
         what:"地址栏是 id.best.com。仍是加载页。中台读到 Cookie：全局 + BPS 免登开 + 注册开 → 发 code。"},
       {url:`https://${BPS}/sso/callback?code=c_bps_7f2a9c&state=k2m9`, host:"bps", tab:"BPS", page:"blank", title:"BPS 回调验 code", fast:250, slow:1200,
@@ -236,7 +247,7 @@ const scene = ()=>SCENES.find(s=>s.id===sceneId);
 const cur = ()=>scene().steps[step];
 
 function parseUrl(u){
-  if(!u) return {host:"",rest:""};
+  if(!u || u==="about:blank") return {host:"about:blank",rest:""};
   try{const x=new URL(u); return {host:x.host, rest:x.pathname+x.search};}catch{return {host:u,rest:""};}
 }
 function setTag(el,on){ el.textContent=on?"有":"无"; el.className="tag "+(on?"on":"off"); }
@@ -261,17 +272,26 @@ function render(){
   setTag($("ckBps"),cookies.bps);
   setTag($("ckAds"),cookies.ads);
 
-  const {host,rest}=parseUrl(st.url);
-  $("url").className="url"+(st.host==="iam"?" iam":"");
-  $("url").innerHTML=`<span class="rest">https://</span><span class="host">${host}</span><span class="rest">${rest}</span>`;
+  if(st.host==="blank"){
+    $("url").className="url";
+    $("url").innerHTML=`<span class="rest">${lang==="zh"?"搜索或输入网址":"Search or type a URL"}</span>`;
+  }else{
+    const {host,rest}=parseUrl(st.url);
+    $("url").className="url"+(st.host==="iam"?" iam":"");
+    $("url").innerHTML=`<span class="rest">https://</span><span class="host">${host}</span><span class="rest">${rest}</span>`;
+  }
 
-  const showAds=st.tab==="ADS"||cookies.ads||(sceneId==="s4"&&step>0);
-  $("tabs").innerHTML=`<button class="tab ${st.tab!=="ADS"?"on":""}">BPS</button>`+(showAds?`<button class="tab ${st.tab==="ADS"?"on":""}">ADS</button>`:"");
+  if(st.host==="blank"){
+    $("tabs").innerHTML=`<button class="tab on">${lang==="zh"?"新标签页":"New Tab"}</button>`;
+  }else{
+    const showAds=st.tab==="ADS"||cookies.ads||(sceneId==="s4"&&step>0);
+    $("tabs").innerHTML=`<button class="tab ${st.tab!=="ADS"?"on":""}">BPS</button>`+(showAds?`<button class="tab ${st.tab==="ADS"?"on":""}">ADS</button>`:"");
+  }
 
   $("stage").innerHTML=pageHtml(st);
   bindPage();
 
-  if(st.url && trail[trail.length-1]!==st.url) trail.push(st.url);
+  if(st.url && st.url!=="about:blank" && trail[trail.length-1]!==st.url) trail.push(st.url);
   $("hist").innerHTML=trail.map((u,i)=>{
     const p=parseUrl(u); const iam=p.host===IAM; const now=u===st.url;
     return `<div class="row ${iam?"iam":""} ${now?"cur":""}"><span>${i+1}</span><span>${p.host}</span><span>${u}</span></div>`;
@@ -279,11 +299,27 @@ function render(){
 }
 
 function pageHtml(st){
+  if(st.page==="newtab") return newTabHtml();
   if(st.page==="blank") return bridgeHtml(st);
   if(st.page==="bps-login") return `<div class="stay">${bpsLogin(false)}</div>`;
   if(st.page==="bps-home") return `<div class="stay">${bpsHome()}</div>`;
   if(st.page==="ads-home") return `<div class="stay">${adsHome(true)}</div>`;
   return "";
+}
+
+function newTabHtml(){
+  const title=lang==="zh"?"新标签页":"New Tab";
+  const go=lang==="zh"?"进入":"Enter";
+  const placeholder=lang==="zh"?"搜索或输入网址":"Search or type a URL";
+  const hint=lang==="zh"?"点击后打开 platform.bestfulfill.com，开始进入流程":"Click to open platform.bestfulfill.com and start the flow";
+  return `<div class="newtab"><div class="nt-box">
+    <div class="nt-title">${title}</div>
+    <div class="nt-row">
+      <div class="nt-bar">${placeholder}</div>
+      <button class="nt-go" id="enterBps" type="button">${go}</button>
+    </div>
+    <p class="nt-hint">${hint}</p>
+  </div></div>`;
 }
 
 const WAIT_COPY={
@@ -403,6 +439,8 @@ function bindPage(){
   if(ads) ads.onclick=()=>playFrom(step+1);
   const out=$("signout");
   if(out) out.onclick=()=>playFrom(step+1);
+  const enter=$("enterBps");
+  if(enter && cur().wait==="enter") enter.onclick=()=>playFrom(step+1);
 }
 
 function currentSpeed(){
